@@ -1,8 +1,17 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
+
+    const string UppercutPunch = "Punch_Jab_UpperCut";
+    const string RightPunch = "Punch_Jab_Right";
+    const string LeftPunch = "Punch_Jab_Left";
+    const string KO = "KO";
+    const string Hurt = "Hurt";
+
+    
 
     enum PlayerTeam
     {
@@ -22,57 +31,58 @@ public class Player : MonoBehaviour
     [SerializeField] PlayerState playerState = PlayerState.Idle;
 
     [SerializeField] Transform OponentPlayer;
+    [SerializeField] Animator animator;
 
     [SerializeField] SpriteRenderer spriteRenderer;
-
-
     [SerializeField] Sprite idleSprite, punch1Sprite, punch2Sprite, powerPunchSprite, blockSprite;
 
-    [SerializeField] KeyCode punch, powerpunch, block;
+    [SerializeField] KeyCode punch1, punch2, powerpunch, block;
+
+    [SerializeField] Slider health_Slider;
+    [SerializeField] int currentHealth = 100;
+
+    public bool isBlocking = false;
 
     // Start is called before the first frame update
     void Start()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(punch))
+        if (Input.GetKeyDown(punch1))
         {
-            playerState = PlayerState.Punch;
-            
+            animator.Play(RightPunch);
+            Punch();
+            isBlocking = false;
+
+        }else if (Input.GetKeyDown(punch2))
+        {
+            animator.Play(LeftPunch);
+            Punch();
+            isBlocking = false;
+
         }
         else if (Input.GetKey(block))
         {
-            playerState = PlayerState.Block;
+            isBlocking = true;
+
         }
-        else if (Input.GetKey(powerpunch))
+        else if (Input.GetKeyDown(powerpunch))
         {
-            playerState = PlayerState.PowerPunch;
-        }
-        else{
-            playerState = PlayerState.Idle;
-        }
+            PowerPunch();
+            isBlocking = false;
 
-
-        switch (playerState)
+        }
+        else
         {
-            case PlayerState.Idle:
-                Idle();
-                break;
-            case PlayerState.Punch:
-                Punch();
-                break;
-            case PlayerState.PowerPunch:
-                PowerPunch();
-                break;
-            case PlayerState.Block:
-                Block();
-                break;
+            isBlocking = false;
         }
 
+        animator.SetBool("IsBlocking",isBlocking);
     }
 
 
@@ -80,33 +90,42 @@ public class Player : MonoBehaviour
     void Punch()
     {
         Debug.Log($"Punched");
-        int r = Random.Range(0, 50);
-        if (r % 2 == 0)
-        {
-            spriteRenderer.sprite = punch1Sprite;
-        }
-        else
-        {
-            spriteRenderer.sprite = punch2Sprite;
-        }
+        GameManager.Instance.WhoIsPunching(this);        
     }
 
     void PowerPunch()
     {
         Debug.Log($"Power Punched !");
-        spriteRenderer.sprite = powerPunchSprite;
+        animator.Play(UppercutPunch);
+        GameManager.Instance.WhoIsPoWerPunching(this);
+
     }
 
-    void Block()
-    {
-        Debug.Log($"Blocked");
-        spriteRenderer.sprite = blockSprite;
-    }
+    // void Block()
+    // {
+    //     Debug.Log($"Blocked");
+    //     spriteRenderer.sprite = blockSprite;
 
-    void Idle()
+    // }
+
+    // void Idle()
+    // {
+    //     spriteRenderer.sprite = idleSprite;
+    // }
+
+
+
+    public void Hit(int amount = 1)
     {
-        spriteRenderer.sprite = idleSprite;
-    }
+        currentHealth -= amount;
+        health_Slider.value = currentHealth;
+
+        if (currentHealth <= 0)
+        {
+            animator.Play(KO);
+        }
+    } 
+
 
 
 
