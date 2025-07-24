@@ -11,78 +11,83 @@ public class Player : MonoBehaviour
     const string KO = "KO";
     const string Hurt = "Hurt";
 
-    
-
     enum PlayerTeam
     {
         PlayerA,
         PlayerB
     }
 
-    public enum PlayerState
-    {
-        Idle,
-        Punch,
-        PowerPunch,
-        Block
-    }
-
     [SerializeField] PlayerTeam playerTeam;
-    [SerializeField] PlayerState playerState = PlayerState.Idle;
-
-    [SerializeField] Transform OponentPlayer;
     [SerializeField] Animator animator;
 
-    [SerializeField] SpriteRenderer spriteRenderer;
-    [SerializeField] Sprite idleSprite, punch1Sprite, punch2Sprite, powerPunchSprite, blockSprite;
-
+    [Header("Controls")]
     [SerializeField] KeyCode punch1, punch2, powerpunch, block;
 
-    [SerializeField] Slider health_Slider;
+    Slider health_Slider;
     [SerializeField] int currentHealth = 100;
 
     public bool isBlocking = false;
+    public bool canPunch;
+    bool isDead = false;
+
+    [SerializeField] float maxPunchDelay = 1f;
+    float punchTimer;
 
     // Start is called before the first frame update
     void Start()
     {
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         animator = GetComponentInChildren<Animator>();
+        health_Slider = GameObject.FindGameObjectWithTag(playerTeam.ToString()).GetComponent<Slider>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(punch1))
+        if (!isDead)
         {
-            animator.Play(RightPunch);
-            Punch();
-            isBlocking = false;
+            if (Input.GetKeyDown(punch1) && canPunch)
+            {
+                canPunch = false;
+                punchTimer = maxPunchDelay;
+                animator.Play(RightPunch);
+                Punch();
+                isBlocking = false;
+            }
+            else if (Input.GetKeyDown(punch2) && canPunch)
+            {
+                canPunch = false;
+                punchTimer = maxPunchDelay;
+                animator.Play(LeftPunch);
+                Punch();
+                isBlocking = false;
+            }
+            else if (Input.GetKeyDown(powerpunch) && canPunch)
+            {
+                canPunch = false;
+                punchTimer = maxPunchDelay;
+                PowerPunch();
+                isBlocking = false;
+            }
+            else if (Input.GetKey(block))
+            {
+                isBlocking = true;
+            }
+            else
+            {
+                isBlocking = false;
+            }
 
-        }else if (Input.GetKeyDown(punch2))
-        {
-            animator.Play(LeftPunch);
-            Punch();
-            isBlocking = false;
 
+            if (punchTimer <= 0)
+            {
+                canPunch = true;
+            }
+            if (canPunch == false)
+            {
+                punchTimer -= Time.deltaTime;
+            }
+            animator.SetBool("IsBlocking", isBlocking);
         }
-        else if (Input.GetKey(block))
-        {
-            isBlocking = true;
-
-        }
-        else if (Input.GetKeyDown(powerpunch))
-        {
-            PowerPunch();
-            isBlocking = false;
-
-        }
-        else
-        {
-            isBlocking = false;
-        }
-
-        animator.SetBool("IsBlocking",isBlocking);
     }
 
 
@@ -90,7 +95,7 @@ public class Player : MonoBehaviour
     void Punch()
     {
         Debug.Log($"Punched");
-        GameManager.Instance.WhoIsPunching(this);        
+        GameManager.Instance.WhoIsPunching(this);
     }
 
     void PowerPunch()
@@ -101,20 +106,6 @@ public class Player : MonoBehaviour
 
     }
 
-    // void Block()
-    // {
-    //     Debug.Log($"Blocked");
-    //     spriteRenderer.sprite = blockSprite;
-
-    // }
-
-    // void Idle()
-    // {
-    //     spriteRenderer.sprite = idleSprite;
-    // }
-
-
-
     public void Hit(int amount = 1)
     {
         currentHealth -= amount;
@@ -123,8 +114,9 @@ public class Player : MonoBehaviour
         if (currentHealth <= 0)
         {
             animator.Play(KO);
+            isDead = true;
         }
-    } 
+    }
 
 
 
