@@ -1,8 +1,9 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using FishNet.Object;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
 
     const string UppercutPunch = "Punch_Jab_UpperCut";
@@ -22,6 +23,7 @@ public class Player : MonoBehaviour
 
     [Header("Controls")]
     [SerializeField] KeyCode punch1, punch2, powerpunch, block;
+    [SerializeField] float moveSpeed;
 
     Slider health_Slider;
     [SerializeField] int currentHealth = 100;
@@ -43,6 +45,14 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        if (!IsOwner) return;
+
+
+        float horizontal = Input.GetAxis("Horizontal");
+        Vector3 moveDirection = new Vector3(horizontal, 0f, 0f);
+        transform.position += moveDirection * moveSpeed * Time.deltaTime;
+
         if (!isDead)
         {
             if (Input.GetKeyDown(punch1) && canPunch)
