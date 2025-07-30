@@ -22,7 +22,8 @@ public class Player : NetworkBehaviour
     [SerializeField] Animator animator;
 
     [Header("Controls")]
-    [SerializeField] KeyCode punch1, punch2, powerpunch, block;
+    [SerializeField] KeyCode punch1;
+    [SerializeField] KeyCode punch2, powerpunch, block;
     [SerializeField] float moveSpeed;
 
     Slider health_Slider;
